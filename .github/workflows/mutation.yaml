@@ -1,0 +1,27 @@
+on: [push, pull_request]
+name: mutation
+
+permissions:
+  contents: read
+
+jobs:
+  gooze:
+    runs-on: ubuntu-latest
+    steps:
+    # gooze needs Go 1.27.3 or newer to build, so use the latest Go here
+    # (the module's go 1.13 line predates toolchain switching).
+    - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b #v5.4.0
+      with:
+        go-version: 1.x
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+
+    - name: Install gooze
+      run: go install gooze.dev/pkg/gooze@v1.3.0
+
+    # Report only: prints each surviving mutant as a diff and the mutation
+    # score, and never fails the build on the score.
+    - name: Run mutation testing
+      run: gooze run ./...
+
+    - name: Mutation score per file
+      run: gooze report view
